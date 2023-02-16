@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydropressDB", "HydropressDB.csproj", "{6354CC10-61C6-4DD1-BF92-EFFA1407482D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadingSpinner", "..\LoadingSpinner\LoadingSpinner.csproj", "{99F25234-C445-4210-8639-DACF0C0DFC07}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6354CC10-61C6-4DD1-BF92-EFFA1407482D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6354CC10-61C6-4DD1-BF92-EFFA1407482D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6354CC10-61C6-4DD1-BF92-EFFA1407482D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6354CC10-61C6-4DD1-BF92-EFFA1407482D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99F25234-C445-4210-8639-DACF0C0DFC07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F25234-C445-4210-8639-DACF0C0DFC07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99F25234-C445-4210-8639-DACF0C0DFC07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99F25234-C445-4210-8639-DACF0C0DFC07}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A8695E89-938D-467B-925E-F59B03C4B7CD}
+	EndGlobalSection
+EndGlobal

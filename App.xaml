@@ -1,0 +1,9 @@
+﻿<Application x:Class="HydropressDB.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:HydropressDB"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <local:MainViewModel x:Key="Mvm" x:Name="Mvm"/>
+    </Application.Resources>
+</Application>
