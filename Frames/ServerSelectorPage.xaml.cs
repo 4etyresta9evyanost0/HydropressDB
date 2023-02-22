@@ -9,13 +9,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.SqlServer.Management.Smo.Wmi;
 
 namespace HydropressDB
@@ -25,30 +18,41 @@ namespace HydropressDB
     /// </summary>
     public partial class ServerSelectorPage : Page
     {
+        
         public ServerSelectorPage()
         {
             InitializeComponent();
-            dgv.SelectionChanged += (x, ev) =>
+            dgv.SelectionChanged += async (x, ev) =>
             {
+                var Mvm = (MainViewModel)Application.Current.Resources["Mvm"];
                 lbDb.Items.Clear();
                 if (dgv.SelectedIndex != -1)
                 {
                     string serverName = ((DataRowView)dgv.SelectedValue)[0].ToString();
-                    Server server = new Server(serverName);
-                    
+                    Server server = null;
                     try
                     {
-                        foreach (Database database in server.Databases)
+                        Mvm.LoadingTasks.Add("ServerSelectorPage.Databases.Update");
+                        await Task.Run(() => server = new Server(serverName));
+                        DatabaseCollection databases = null;
+                        await Task.Run(() => databases = server.Databases);
+                        Mvm.LoadingTasks.Remove("ServerSelectorPage.Databases.Update");
+                        foreach (Database database in databases)
                         {
                             lbDb.Items.Add(database.Name);
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        string exception = ex.Message;
+                        Mvm.LoadingTasks.Remove("ServerSelectorPage.Databases.Update");
                     }
                 }
             };
+        }
+
+        public ListBox ListBoxDataBases
+        {
+            get => lbDb;
         }
     }
 }
