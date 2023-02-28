@@ -21,9 +21,6 @@
                                    Watermark="Логин" Width="200" Height="32" Margin="5" FontSize="20"/>
             <xctk:WatermarkPasswordBox x:Name="passwordTb" 
                                        DataContext="{DynamicResource Mvm}"
-                                       Text="{Binding UserSettings.Password, 
-                                        UpdateSourceTrigger=PropertyChanged, 
-                                        Mode=TwoWay}" 
                                        Watermark="Пароль" PasswordChar="#" Width="200" Height="32" Margin="5" FontSize="20"/>
             <Button Content="Войти" FontSize="20" Margin="5" Click="Button_Click"/>
             <CheckBox Content="Входить автоматически?"

@@ -53,6 +53,9 @@ namespace HydropressDB
         private string username;
         private string password;
 
+        //technical
+        private int connectionTimeout = 15;
+
         public string ServerName
         {
             get => servername;
@@ -99,13 +102,23 @@ namespace HydropressDB
                 OnPropertyChanged(nameof(Username));
             }
         }
-        public string Password
+        //public string Password
+        //{
+        //    get => password;
+        //    set
+        //    {
+        //        password = value;
+        //        OnPropertyChanged(nameof(Password));
+        //    }
+        //}
+
+        public int ConnectionTimeout
         {
-            get => password;
+            get => connectionTimeout;
             set
-            {
-                password = value;
-                OnPropertyChanged(nameof(Password));
+            { 
+                connectionTimeout = value;
+                OnPropertyChanged(nameof(ConnectionTimeout));
             }
         }
     }
@@ -209,20 +222,28 @@ namespace HydropressDB
 
         public MainViewModel()
         {
-            ReadJSONSettingsFile();
-            CurrentPage = serverPage;
+            #region Initialization
             LoadingTasks.CollectionChanged += (s, e) => IsLoading = !loadingTasks.IsNullOrEmpty();
-            pages.CollectionChanged += (s, e) => { };
-
-
-            //
-            //  Как включить:
-            //  Запустить SQL Server Browser service (Служба обозревателя SQL Server)
-            //  Это делается из SQL Server Manager (Диспетчер конфигурации SQL Server)
-            //  Если не получается, то приложение ищет по реестрам только локальные сервера, иначе серверов нет.
-            //
-            Task.Run(()=>UpdateServers());
-
+            Pages.CollectionChanged += (s, e) => { };
+            AvailablePages.CollectionChanged += (s, e) => { };
+            #endregion
+            CurrentPage = serverPage;
+            ReadJSONSettingsFile();
+            var gotDbs = UserSettings.ServerName != null && UserSettings.MainDbName != null && UserSettings.UserDbName != null;
+            if (gotDbs)
+            {
+                var connectTask = Task.Run(()=>CreateConnectionToServer(UserSettings.ServerName, UserSettings.MainDbName, UserSettings.UserDbName));
+                connectTask.Wait();
+                if (connectTask.Result)
+                {
+                    CurrentPage = authPage;
+                }
+            }
+            else
+            {
+                UserSettings = new UserSettings();
+                Task.Run(() => UpdateServers());
+            }
         }
 
         public async Task CreateJSONSettingsFile()
@@ -278,7 +299,7 @@ namespace HydropressDB
             }
         }
 
-        public async Task Authorize(string username, string password)
+        public async Task<bool> Authorize(string username, string password)
         {
             var command = $@"SELECT * FROM [Users] WHERE Nickname = '{username}';";
             SqlDataAdapter adapter = new SqlDataAdapter(command, UserConnection);
@@ -286,24 +307,36 @@ namespace HydropressDB
             DataSet ds = new DataSet();
             // Заполняем Dataset
             adapter.Fill(ds);
-            var row = ds.Tables[0].Rows[0];
-            if ((string)row[1] != username)
+            ds.Dispose();
+            adapter.Dispose();
+
+            if (ds.Tables.Count < 1 && ds.Tables[0].Rows.Count < 1)
             {
-                MessageBox.Show("Такого пользователя не существует!","Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                MessageBox.Show("Такого пользователя не существует!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
+
+            var row = ds.Tables[0].Rows[0];
+            //if ((string)row[1] != username)
+            //{   // Этого не должно быть
+            //    MessageBox.Show("Такого пользователя не существует!","Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return false;
+            //}
             if ((string)row[2] != password)
             {
                 MessageBox.Show("Неправильный пароль!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                return false;
             }
 
             //REDO
+            UserSettings.Username = username;
+            //UserSettings.Password = password;
             CurrentPage = mainPage;
             //TableAdapterManager tableAdapterManager = new TableAdapterManager();
             //TODO-REDO
 
             await CreateJSONSettingsFile();
+            return true;
         }
         // server page commands
         public RelayCommand ConnectToServerCommand
@@ -335,28 +368,11 @@ namespace HydropressDB
                             return;
                         }
 
-                        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-                        {
-                            Pooling = true,
-                            IntegratedSecurity = true,
-                            TrustServerCertificate = true,
-                            ConnectTimeout = 15,
-                            DataSource = serverAdressTb.Text,
-                            InitialCatalog = mainDbTb.Text,
-                        };
-
-                        MainConnection = new SqlConnection(builder.ConnectionString);
-                        builder.InitialCatalog = userDbTb.Text;
-                        UserConnection = new SqlConnection(builder.ConnectionString);
-
-                        var res = Task.Run(()=>ConnectToServer());
-                        LoadingTasks.Add(res);
+                        var res = CreateConnectionToServer(serverAdressTb.Text, mainDbTb.Text, userDbTb.Text);
                         await res;
-                        LoadingTasks.Remove(res);
-
-                        if (res.Result == null)
+                        if (res.Result)
                         {
-                            UserSettings.ServerName = builder.DataSource;
+                            UserSettings.ServerName = serverAdressTb.Text;
                             UserSettings.MainDbName = mainDbTb.Text;
                             UserSettings.UserDbName = userDbTb.Text;
 
@@ -391,6 +407,32 @@ namespace HydropressDB
                 OnPropertyChanged(nameof(UserSettings));
             }
         }
+
+        public async Task<bool> CreateConnectionToServer(string server, string maindb, string userdb)
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
+            {
+                Pooling = true,
+                IntegratedSecurity = true,
+                TrustServerCertificate = true,
+                ConnectTimeout = UserSettings.ConnectionTimeout,
+                DataSource = server,
+                InitialCatalog = maindb,
+            };
+
+            MainConnection = new SqlConnection(builder.ConnectionString);
+            builder.InitialCatalog = userdb;
+            UserConnection = new SqlConnection(builder.ConnectionString);
+
+            var res = ConnectToServer();
+            LoadingTasks.Add(res);
+            await res;
+            LoadingTasks.Remove(res);
+
+            return res.Result == null;
+
+        }
+
         public async Task<Exception> ConnectToServer()
         {
             try
@@ -504,7 +546,20 @@ namespace HydropressDB
                     Application.Current.MainWindow.WindowState = WindowState.Minimized));
             }
         }
-        
+
+        RelayCommand changeFrame;
+        public RelayCommand ChangeFrame
+        {
+            get
+            {
+                return changeFrame ??
+                    (changeFrame = new RelayCommand(obj => {
+                        var p = (Page)obj;
+                        CurrentPage = p;
+                    }));
+            }
+        }
+
         // connections
         public int ConnectionTimeout
         {
@@ -625,6 +680,12 @@ namespace HydropressDB
         public ObservableCollection<object> LoadingTasks { get => loadingTasks; }
         public ObservableCollection<Page> Pages { get => pages; }
 
+        //
+        //  Как включить:
+        //  Запустить SQL Server Browser service (Служба обозревателя SQL Server)
+        //  Это делается из SQL Server Manager (Диспетчер конфигурации SQL Server)
+        //  Если не получается, то приложение ищет по реестрам только локальные сервера, иначе серверов нет.
+        //
         public async Task UpdateServers()
         {
             LoadingTasks.Add("ServerList.Update");
