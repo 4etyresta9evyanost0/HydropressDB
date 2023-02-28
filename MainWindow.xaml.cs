@@ -33,10 +33,14 @@ namespace HydropressDB
 
     public partial class MainWindow : Window
     {
-
+        MainViewModel Mvm;
         public MainWindow()
         {
             InitializeComponent();
+
+            Mvm = (MainViewModel)DataContext;
+
+            this.Closing += async (s, e) => await Mvm.DisconectFromServer();
             this.MaxHeight = SystemParameters.VirtualScreenHeight + 60;
             this.SourceInitialized += new EventHandler(win_SourceInitialized);
             mainAppBar.MouseDown += (x,e) =>

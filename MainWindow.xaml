@@ -45,20 +45,20 @@
         </Border.Style>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="25"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="25"/>
             </Grid.RowDefinitions>
             <DockPanel x:Name="mainAppBar" Grid.Row="0" Grid.ColumnSpan="2" FlowDirection="RightToLeft" Background="#FF7B7B7B">
                 <DockPanel.Resources>
                     <Style TargetType="{x:Type Button}">
-                        <Setter Property="Margin" Value="2,2,10,2"/>
-                        <Setter Property="Width" Value="21"/>
-                        <Setter Property="Height" Value="21"/>
+                        <Setter Property="Margin" Value="0,0,0,0"/>
+                        <Setter Property="Width" Value="35"/>
+                        <Setter Property="VerticalAlignment" Value="Stretch"/>
                     </Style>
                 </DockPanel.Resources>
-                <Button Padding="3" Command="{Binding CloseWindowCommand}" 
-                        BorderBrush="{x:Null}" Background="#FF7B7B7B">
+                <Button Padding="0" Command="{Binding CloseWindowCommand}" 
+                        BorderBrush="{x:Null}" Background="#FFFF7B7B">
                     <!--<Image Source="pack://application:,,,/Resources/MENU_CLOSE_BUTTON.png"></Image>-->
                     <Path Stroke="Black" >
                         <Path.Data>
@@ -99,7 +99,7 @@
                         </Path.Data>
                     </Path>
                 </Button>
-                <Label Content="ООО &quot;Гидропресс&quot;" FlowDirection="LeftToRight" FontWeight="Bold"/>
+                <Label Content="ООО &quot;Гидропресс&quot;" FlowDirection="LeftToRight" FontWeight="Bold" VerticalContentAlignment="Center" FontSize="15"/>
             </DockPanel>
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -117,9 +117,22 @@
                             <RowDefinition Height="15*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>-->
-                        <Button Content="Авторизация"/>
-                        <Button Content="Выбор"/>
-                        <Button Content="Подключение" VerticalAlignment="Bottom"/>
+                        <Button Content="Авторизация"
+                                Command=""
+                                CommandParameter=""/>
+                        <!--<Button Content="Выбор"/>-->
+                        <Button Content="Подключение" VerticalAlignment="Bottom"
+                                Command=""
+                                CommandParameter=""/>
+                        <Button Content="Администратор" VerticalAlignment="Bottom"
+                                Command=""
+                                CommandParameter=""/>
+                        <Button Content="Конструктор" VerticalAlignment="Bottom"
+                                Command=""
+                                CommandParameter=""/>
+                        <Button Content="Просмотр" VerticalAlignment="Bottom"
+                                Command=""
+                                CommandParameter=""/>
                     </StackPanel>
                 </Border>
                 <Frame NavigationUIVisibility="Hidden" Background="DarkGray" 
@@ -174,109 +187,103 @@
             </Grid>
             <StatusBar Grid.Row="2" Grid.ColumnSpan="2"  BorderThickness="0,2,0,0" BorderBrush="#999">
                 <StatusBarItem>
-                    <Label Content="{Binding ServerName}" FontSize="12" Padding="0">
-                        <Label.Style>
-                            <Style TargetType="Label">
-                                <Style.Triggers>
-                                    <Trigger Property="Content" Value="Server is not selected">
-                                        <Setter Property="Foreground" Value="DarkRed"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Label.Style>
-                    </Label>
+                    <xctk:WatermarkTextBox Text="{Binding UserSettings.ServerName, UpdateSourceTrigger=PropertyChanged}" 
+                                           FontSize="12" Padding="0"
+                                           Watermark="No connection to server"
+                                           IsReadOnly="True"
+                                           IsReadOnlyCaretVisible="False"
+                                           BorderThickness="0"
+                                           Background="Transparent" Cursor="Arrow"
+                                           Focusable="False">
+                    </xctk:WatermarkTextBox>
                 </StatusBarItem>
                 <Separator/>
                 <StatusBarItem>
-                    <Label Content="{Binding MainDatabaseName}" FontSize="12" Padding="0">
-                        <Label.Style>
-                            <Style TargetType="Label">
-                                <Style.Triggers>
-                                    <Trigger Property="Content" Value="Main DB is not selected">
-                                        <Setter Property="Foreground" Value="DarkRed"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Label.Style>
-                    </Label>
+                    <xctk:WatermarkTextBox Text="{Binding UserSettings.MainDbName, UpdateSourceTrigger=PropertyChanged}" 
+                                           FontSize="12" Padding="0"
+                                           Watermark="MainDB is not selected"
+                                           IsReadOnly="True"
+                                           IsReadOnlyCaretVisible="False"
+                                           BorderThickness="0"
+                                           Background="Transparent" Cursor="Arrow"
+                                           Focusable="False">
+                    </xctk:WatermarkTextBox>
                 </StatusBarItem>
                 <Separator/>
                 <StatusBarItem>
-                    <Label Content="{Binding UserDatabaseName}" FontSize="12" Padding="0">
-                        <Label.Style>
-                            <Style TargetType="Label">
-                                <Style.Triggers>
-                                    <Trigger Property="Content" Value="User DB is not selected">
-                                        <Setter Property="Foreground" Value="DarkRed"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Label.Style>
-                    </Label>
+                    <xctk:WatermarkTextBox Text="{Binding UserSettings.UserDbName, UpdateSourceTrigger=PropertyChanged}" 
+                                           FontSize="12" Padding="0"
+                                           Watermark="UserDB is not selected"
+                                           IsReadOnly="True"
+                                           IsReadOnlyCaretVisible="False"
+                                           BorderThickness="0"
+                                           Background="Transparent" Cursor="Arrow"
+                                           Focusable="False">
+                    </xctk:WatermarkTextBox>
                 </StatusBarItem>
                 <StatusBarItem HorizontalAlignment="Right">
-                    <Label Content="{Binding UserName}" FontSize="12" Padding="0">
-                        <Label.Style>
-                            <Style TargetType="Label">
-                                <Style.Triggers>
-                                    <Trigger Property="Content" Value="User is not authorized">
-                                        <Setter Property="Foreground" Value="DarkRed"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Label.Style>
-                    </Label>
+                    <xctk:WatermarkTextBox Text="{Binding UserSettings.Username, UpdateSourceTrigger=PropertyChanged}" 
+                                           FontSize="12" Padding="0"
+                                           Watermark="User is not authorized"
+                                           IsReadOnly="True"
+                                           IsReadOnlyCaretVisible="False"
+                                           BorderThickness="0"
+                                           Background="Transparent" Cursor="Arrow"
+                                           Focusable="False">
+                    </xctk:WatermarkTextBox>
                 </StatusBarItem>
             </StatusBar>
-            <Rectangle x:Name="leftSizeGrip"
-    Width="7"
-    HorizontalAlignment="Left"
-    Cursor="SizeWE"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle x:Name="rightSizeGrip"
-    Width="7"
-    HorizontalAlignment="Right"
-    Cursor="SizeWE"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle x:Name="topSizeGrip"
-    Height="7"
-    VerticalAlignment="Top"
-    Cursor="SizeNS"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle x:Name="bottomSizeGrip"
-    Height="7"
-    VerticalAlignment="Bottom"
-    Cursor="SizeNS"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <!--  Corners  -->
-            <Rectangle Name="topLeftSizeGrip"
-    Width="7"
-    Height="7"
-    HorizontalAlignment="Left"
-    VerticalAlignment="Top"
-    Cursor="SizeNWSE"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle Name="bottomRightSizeGrip"
-    Width="7"
-    Height="7"
-    HorizontalAlignment="Right"
-    VerticalAlignment="Bottom"
-    Cursor="SizeNWSE"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle Name="topRightSizeGrip"
-    Width="7"
-    Height="7"
-    HorizontalAlignment="Right"
-    VerticalAlignment="Top"
-    Cursor="SizeNESW"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
-            <Rectangle Name="bottomLeftSizeGrip"
-    Width="7"
-    Height="7"
-    HorizontalAlignment="Left"
-    VerticalAlignment="Bottom"
-    Cursor="SizeNESW"
-    Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+            <Grid Grid.RowSpan="3" d:IsHidden="True" d:IsLocked="True">
+                <Rectangle x:Name="leftSizeGrip"
+                Width="7"
+                HorizontalAlignment="Left"
+                Cursor="SizeWE"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle x:Name="rightSizeGrip"
+                Width="7"
+                HorizontalAlignment="Right"
+                Cursor="SizeWE"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle x:Name="topSizeGrip"
+                Height="7"
+                VerticalAlignment="Top"
+                Cursor="SizeNS"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle x:Name="bottomSizeGrip"
+                Height="7"
+                VerticalAlignment="Bottom"
+                Cursor="SizeNS"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <!--  Corners  -->
+                <Rectangle Name="topLeftSizeGrip"
+                Width="7"
+                Height="7"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Cursor="SizeNWSE"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle Name="bottomRightSizeGrip"
+                Width="7"
+                Height="7"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Cursor="SizeNWSE"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle Name="topRightSizeGrip"
+                Width="7"
+                Height="7"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Cursor="SizeNESW"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+                <Rectangle Name="bottomLeftSizeGrip"
+                Width="7"
+                Height="7"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Cursor="SizeNESW"
+                Style="{StaticResource RectBorderStyle}" Grid.RowSpan="3"/>
+            </Grid>
             <!--<CheckBox x:Name="cbTest" Content="DEBUG" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="20" IsChecked="True"/>-->
         </Grid>
     </Border>

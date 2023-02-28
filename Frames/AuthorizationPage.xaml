@@ -1,20 +1,36 @@
-﻿<Page x:Class="HydropressDB.AuthorizationPage"
+﻿<Page
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:HydropressDB"
       xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+      xmlns:LoadingSpinner="clr-namespace:LoadingSpinner;assembly=LoadingSpinner" x:Class="HydropressDB.AuthorizationPage"
       mc:Ignorable="d" 
       d:DesignHeight="368" d:DesignWidth="618"
       Title="AuthorizationPage"
-      Background="White" DataContext="{DynamicResource Mvm}">
-
+      Background="White" DataContext="{DynamicResource AuthVm}">
     <Grid>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Label Content="Авторизация" FontSize="20" HorizontalContentAlignment="Center"></Label>
-            <xctk:WatermarkTextBox Watermark="Логин" Width="200" Height="32" Margin="5" FontSize="20"/>
-            <xctk:WatermarkPasswordBox Watermark="Пароль" PasswordChar="#" Width="200" Height="32" Margin="5" FontSize="20"/>
+            <Label Content="Авторизация" FontSize="20" HorizontalContentAlignment="Center"/>
+            <xctk:WatermarkTextBox x:Name="loginTb" 
+                                   DataContext="{DynamicResource Mvm}" 
+                                   Text="{Binding UserSettings.Username, 
+                                    UpdateSourceTrigger=PropertyChanged, 
+                                    Mode=OneTime}" 
+                                   Watermark="Логин" Width="200" Height="32" Margin="5" FontSize="20"/>
+            <xctk:WatermarkPasswordBox x:Name="passwordTb" 
+                                       DataContext="{DynamicResource Mvm}"
+                                       Text="{Binding UserSettings.Password, 
+                                        UpdateSourceTrigger=PropertyChanged, 
+                                        Mode=TwoWay}" 
+                                       Watermark="Пароль" PasswordChar="#" Width="200" Height="32" Margin="5" FontSize="20"/>
+            <Button Content="Войти" FontSize="20" Margin="5" Click="Button_Click"/>
+            <CheckBox Content="Входить автоматически?"
+                      DataContext="{DynamicResource Mvm}"
+                      IsChecked="{Binding UserSettings.Autologin, 
+                        UpdateSourceTrigger=PropertyChanged, 
+                        Mode=TwoWay}"/>
         </StackPanel>
     </Grid>
 </Page>

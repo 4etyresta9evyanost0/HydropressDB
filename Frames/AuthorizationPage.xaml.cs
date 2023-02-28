@@ -20,9 +20,16 @@ namespace HydropressDB
     /// </summary>
     public partial class AuthorizationPage : Page
     {
+        AuthorizationViewModel AuthVm { get => (AuthorizationViewModel)Application.Current.Resources["AuthVm"]; }
+        MainViewModel Mvm { get => (MainViewModel)Application.Current.Resources["Mvm"]; }
         public AuthorizationPage()
         {
             InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Mvm.Authorize(loginTb.Text, passwordTb.Password);
         }
     }
 }

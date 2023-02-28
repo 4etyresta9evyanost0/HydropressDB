@@ -15,12 +15,16 @@
             <RowDefinition Height="2*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <DockPanel>
-            <DataGrid x:Name="dgv" 
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <DataGrid x:Name="dgv" Grid.Column="0"
                 Margin="20,20,20,20" BorderThickness="1" BorderBrush="Black" 
                 IsReadOnly="True" HeadersVisibility="Column"
                 ItemsSource="{Binding Path=AvailableServers, UpdateSourceTrigger=PropertyChanged, IsAsync=True}"
-                SelectionMode="Single" Width="394" SelectionUnit="FullRow"
+                SelectionMode="Single" SelectionUnit="FullRow"
                 SelectedItem="{Binding SelectedServer, UpdateSourceTrigger=PropertyChanged}">
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader">
@@ -47,13 +51,21 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </DataGrid>
-            <ListBox x:Name="lbDb"
+            <ListBox x:Name="lbDb" Grid.Column="1"
                 Margin="20,20,20,20" BorderThickness="1" BorderBrush="Black" 
                 SelectionMode="Single"
                 SelectedItem="{Binding SelectedDb, UpdateSourceTrigger=PropertyChanged}">
+                <ListBoxItem>
+                    <ListBoxItem.ContextMenu>
+                        <ContextMenu>
+                            <Button Content="Основная"></Button>
+                            <Button Content="Пользовательская"></Button>
+                        </ContextMenu>
+                    </ListBoxItem.ContextMenu>
+                </ListBoxItem>
             </ListBox>
 
-        </DockPanel>
+        </Grid>
         <StackPanel Grid.Row="1">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -72,8 +84,11 @@
                 </Button>
             </Grid>
             <DockPanel Height="28">
-                <Label  Content="Задать сервер:" DockPanel.Dock="Left"/>
-                <xctk:WatermarkTextBox x:Name="serverAdressTb" Watermark="Введите адрес сервера" Text="" Padding="0" DockPanel.Dock="Left" Margin="5"/>
+                <Label Width="123" Content="Задать сервер:" DockPanel.Dock="Left"/>
+                <xctk:WatermarkTextBox 
+                    x:Name="serverAdressTb" 
+                    Text="{Binding UserSettings.ServerName, Mode=OneTime}"
+                    Watermark="Введите адрес сервера" Padding="0" DockPanel.Dock="Left" Margin="5"/>
             </DockPanel>
             <DockPanel Height="28">
                 <Label Width="123" Content="Задать базы данных:" DockPanel.Dock="Left"/>
@@ -82,12 +97,27 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <xctk:WatermarkTextBox x:Name="mainDbTb" Watermark="Введите имя основной базы данных" Text="" Padding="0" Margin="5" Grid.Column="0"/>
-                    <xctk:WatermarkTextBox x:Name="userDbTb" Watermark="Введите имя базы данных пользователей" Text="" Padding="0" Margin="5" Grid.Column="1"/>
+                    <xctk:WatermarkTextBox x:Name="mainDbTb"
+                                           Text="{Binding UserSettings.MainDbName, Mode=OneTime}"
+                                           Watermark="Введите имя основной базы данных" Padding="0" Margin="5" Grid.Column="0"/>
+                    <xctk:WatermarkTextBox x:Name="userDbTb"
+                                           Text="{Binding UserSettings.UserDbName, Mode=OneTime}"
+                                           Watermark="Введите имя базы данных пользователей" Padding="0" Margin="5" Grid.Column="1"/>
                 </Grid>
             </DockPanel>
             <DockPanel>
-                <Button Margin="5" Content="Подключится" Command="{Binding ConnectToServerCommand}"/>
+                <Button Padding="0" HorizontalContentAlignment="Stretch" 
+                        VerticalContentAlignment="Stretch" 
+                        x:Name="connectToServerButton" 
+                        Height="21" Margin="5" 
+                        Command="{Binding ConnectToServerCommand}">
+                    <Button.Content>
+                        <Grid>
+                            <ProgressBar BorderThickness="0"></ProgressBar>
+                            <TextBlock Padding="1" TextAlignment="Center"  Text="Подключиться"></TextBlock>
+                        </Grid>
+                    </Button.Content>
+                </Button>
             </DockPanel>
         </StackPanel>
     </Grid>

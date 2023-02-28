@@ -17,8 +17,14 @@ using System.Windows.Input;
 using System.Data.Common;
 using System.Windows;
 using Xceed.Wpf.AvalonDock.Controls;
-using System.Data.SqlClient;
-using System.Text.Json;
+using Microsoft.Data.SqlClient;
+//using System.Data.SqlClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.IO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Runtime;
+using HydropressDB.HydropressDBDataSetTableAdapters;
 
 namespace HydropressDB
 {
@@ -27,6 +33,81 @@ namespace HydropressDB
         Updating = 1,
         Updated = 0,
         Failed = -1
+    }
+
+    public enum UserType
+    {
+        Guest = -1,
+        Admin = 0,
+        Constructor = 1,
+        Common = 2
+    }
+
+    internal class UserSettings : ViewModel
+    {
+        private string servername;
+        private string maindbname;
+        private string userdbname;
+
+        private bool autologin;
+        private string username;
+        private string password;
+
+        public string ServerName
+        {
+            get => servername;
+            set
+            {
+                servername = value;
+                OnPropertyChanged(nameof(ServerName));
+            }
+        }
+        public string MainDbName
+        {
+            get => maindbname;
+            set
+            {
+                maindbname = value;
+                OnPropertyChanged(nameof(MainDbName));
+            }
+        }
+        public string UserDbName
+        {
+            get => userdbname;
+            set
+            {
+                userdbname = value;
+                OnPropertyChanged(nameof(UserDbName));
+            }
+        }
+
+        public bool Autologin
+        {
+            get => autologin;
+            set
+            {
+                autologin = value;
+                OnPropertyChanged(nameof(Autologin));
+            }
+        }
+        public string Username
+        {
+            get => username;
+            set
+            {
+                username = value;
+                OnPropertyChanged(nameof(Username));
+            }
+        }
+        public string Password
+        {
+            get => password;
+            set
+            {
+                password = value;
+                OnPropertyChanged(nameof(Password));
+            }
+        }
     }
 
     public class RelayCommand : ICommand
@@ -59,63 +140,61 @@ namespace HydropressDB
 
     internal class MainViewModel : ViewModel
     {
-        ObservableCollection<Page> pages;
+        ObservableCollection<Page> pages = new ObservableCollection<Page>();
+        ObservableCollection<Page> sidebarButtons = new ObservableCollection<Page>();
+        ObservableCollection<Page> availablePages = new ObservableCollection<Page>();
+        ObservableCollection<object> loadingTasks = new ObservableCollection<object>();
+        public ObservableCollection<Page> AvailablePages { get => availablePages; }
+        DbManagement dbManagement = new DbManagement();
         Page currentPage;
+        Page mainPage = new MainMenu();
         Page authPage = new AuthorizationPage();
         Page serverPage = new ServerSelectorPage();
         ServerListStatus serverListStatus = ServerListStatus.Updating;
         //ObservableCollection<(Server, Database[])> servers;
         bool isLoading;
-        ObservableCollection<object> loadingTasks = new ObservableCollection<object>();
         DataTable availableServers;
 
         // for further use
-        Server server;
-        Database mainDb;
-        Database userDb;
+        //Server server;
+        //Database mainDb;
+        //Database userDb;
+
+        UserSettings userSettings = new UserSettings();
+        //UserSettings newSettings = new UserSettings();
+        bool isInitialized;
+        public bool IsInitialized
+        {
+            get => isInitialized;
+            set
+            {
+                isInitialized = value;
+                OnPropertyChanged(nameof(IsInitialized));
+            }
+        }
+        UserType userType;
 
         // Json
         //public const JsonDocument settingsJson;
-
-        // connection strings
-        string mainDbConnectionString;
-        string userDbConnectionString;
 
         // connections
         SqlConnection mainConnection;
         SqlConnection userConnection;
 
-        // statusbar 
-        string serverName;
-        string mainDatabaseName;
-        string userDatabaseName;
-        string userName;
+        //statusbar strings
+        //string serverSb;
+        //string mainDbSb;
+        //string userDbSb;
+        //string userSb;
 
+        // time to connect to server
+        int connectTimeout = 15;
+
+        // selected db in server page
+        private string selectedDb;
 
         // server page selected items
         private DataRowView selectedServer;
-
-        public DataRowView SelectedServer
-        {
-            get => selectedServer;
-            set 
-            { 
-                selectedServer = value;
-                OnPropertyChanged(nameof(SelectedServer));
-            }
-        }
-        private string selectedDb;
-
-        public string SelectedDb
-        {
-            get => selectedDb;
-            set 
-            { 
-                selectedDb = value; 
-                OnPropertyChanged(nameof(SelectedDb));
-            }
-        }
-
 
         // server page commands
         RelayCommand connectToServerCommand;
@@ -130,8 +209,12 @@ namespace HydropressDB
 
         public MainViewModel()
         {
+            ReadJSONSettingsFile();
             CurrentPage = serverPage;
             LoadingTasks.CollectionChanged += (s, e) => IsLoading = !loadingTasks.IsNullOrEmpty();
+            pages.CollectionChanged += (s, e) => { };
+
+
             //
             //  Как включить:
             //  Запустить SQL Server Browser service (Служба обозревателя SQL Server)
@@ -139,53 +222,96 @@ namespace HydropressDB
             //  Если не получается, то приложение ищет по реестрам только локальные сервера, иначе серверов нет.
             //
             Task.Run(()=>UpdateServers());
+
         }
 
-        // statusbar 
-        public string ServerName 
-        { 
-            get => serverName ?? "Server is not selected";
-            set
-            {
-                serverName = value;
-                OnPropertyChanged("ServerName");
-            }
-        }
-        public string MainDatabaseName 
-        { 
-            get => mainDatabaseName ?? "Main DB is not selected";
-            set
-            {
-                mainDatabaseName = value;
-                OnPropertyChanged("MainDatabaseName");
-            }
-        }
-        public string UserDatabaseName 
-        { 
-            get => userDatabaseName ?? "User DB is not selected";
-            set
-            {
-                userDatabaseName = value;
-                OnPropertyChanged("UserDatabaseName");
-            }
-        }
-        public string UserName
+        public async Task CreateJSONSettingsFile()
         {
-            get => userName ?? "User is not authorized";
-            set
+            using (StreamWriter fs = new StreamWriter(new FileStream("settings.json", FileMode.Create)))
+                await fs.WriteAsync(JsonConvert.SerializeObject(UserSettings, Formatting.Indented));
+        }
+
+        public void ReadJSONSettingsFile()
+        {
+            using (StreamReader fs = new StreamReader(new FileStream("settings.json", FileMode.OpenOrCreate)))
             {
-                userName = value;
-                OnPropertyChanged("UserName");
+                try
+                {
+                    UserSettings = JsonConvert.DeserializeObject<UserSettings>(fs.ReadToEnd());
+                    if (UserSettings == null)
+                        UserSettings = new UserSettings();
+                }
+                catch (Exception e) {
+                    MessageBox.Show(e.Message, "Ошибка в чтении файла настроек", MessageBoxButton.OK, MessageBoxImage.Error);
+                    UserSettings = new UserSettings();
+                }
+                //TODO
             }
         }
 
+
+        // statusbar strings
+        //public string ServerName
+        //{
+        //    get => UserSettings.ServerName ?? "Server is not selected";
+        //}
+        //public string MainDatabaseName
+        //{
+        //    get => UserSettings.MainDbName ?? "Main DB is not selected";
+        //}
+        //public string UserDatabaseName
+        //{
+        //    get => UserSettings.UserDbName ?? "User DB is not selected";
+        //}
+        //public string UserName
+        //{
+        //    get => UserSettings.Username ?? "User is not authorized";
+        //}
+
+        public UserType UserType
+        {
+            get => userType;
+            set
+            {
+                userType = value;
+                OnPropertyChanged(nameof(UserType));
+            }
+        }
+
+        public async Task Authorize(string username, string password)
+        {
+            var command = $@"SELECT * FROM [Users] WHERE Nickname = '{username}';";
+            SqlDataAdapter adapter = new SqlDataAdapter(command, UserConnection);
+            // Создаем объект Dataset
+            DataSet ds = new DataSet();
+            // Заполняем Dataset
+            adapter.Fill(ds);
+            var row = ds.Tables[0].Rows[0];
+            if ((string)row[1] != username)
+            {
+                MessageBox.Show("Такого пользователя не существует!","Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if ((string)row[2] != password)
+            {
+                MessageBox.Show("Неправильный пароль!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            //REDO
+            CurrentPage = mainPage;
+            //TableAdapterManager tableAdapterManager = new TableAdapterManager();
+            //TODO-REDO
+
+            await CreateJSONSettingsFile();
+        }
         // server page commands
         public RelayCommand ConnectToServerCommand
         {
             get
             {
                 return connectToServerCommand ??
-                    (connectToServerCommand = new RelayCommand(obj =>
+                    (connectToServerCommand = new RelayCommand(async obj =>
                     {
                         TextBox serverAdressTb = (TextBox)serverPage.FindName("serverAdressTb");
                         TextBox mainDbTb = (TextBox)serverPage.FindName("mainDbTb");
@@ -209,8 +335,104 @@ namespace HydropressDB
                             return;
                         }
 
+                        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
+                        {
+                            Pooling = true,
+                            IntegratedSecurity = true,
+                            TrustServerCertificate = true,
+                            ConnectTimeout = 15,
+                            DataSource = serverAdressTb.Text,
+                            InitialCatalog = mainDbTb.Text,
+                        };
+
+                        MainConnection = new SqlConnection(builder.ConnectionString);
+                        builder.InitialCatalog = userDbTb.Text;
+                        UserConnection = new SqlConnection(builder.ConnectionString);
+
+                        var res = Task.Run(()=>ConnectToServer());
+                        LoadingTasks.Add(res);
+                        await res;
+                        LoadingTasks.Remove(res);
+
+                        if (res.Result == null)
+                        {
+                            UserSettings.ServerName = builder.DataSource;
+                            UserSettings.MainDbName = mainDbTb.Text;
+                            UserSettings.UserDbName = userDbTb.Text;
+
+                            CurrentPage = authPage;
+
+                            //UserSettings = new UserSettings
+                            //{
+                            //    Autologin = false,
+                            //    MainDbName = UserSettings.MainDbName,
+                            //    UserDbName = UserSettings.UserDbName,
+                            //    ServerName = ServerName,
+                            //    Username = UserName,
+                            //    Password = null,
+                            //};
+
+                            await CreateJSONSettingsFile();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось подключится к серверу.\r\nПроверьте правильность введённых данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            UserSettings.ServerName = UserSettings.MainDbName = UserSettings.UserDbName = null;
+                        }
                     }));
             }
+        }
+        public UserSettings UserSettings
+        {
+            get => userSettings;
+            set
+            {
+                userSettings = value;
+                OnPropertyChanged(nameof(UserSettings));
+            }
+        }
+        public async Task<Exception> ConnectToServer()
+        {
+            try
+            {
+                var mainTask = MainConnection.OpenAsync();
+                var userTask = UserConnection.OpenAsync();
+
+                await mainTask;
+                await userTask;
+
+                if (mainTask.Exception != null && userTask != null) 
+                    return new AggregateException(mainTask.Exception, userTask.Exception);
+                if (mainTask.Exception != null)
+                    return mainTask.Exception;
+                if (userTask.Exception != null)
+                    return userTask.Exception;
+
+                return null;
+            }
+            catch (Exception ex) { return ex; }
+        }
+        public async Task<Exception> DisconectFromServer()
+        {
+            if (MainConnection == null && UserConnection == null)
+                return new Exception("MainConnection == null || UserConnection == null");
+            try
+            {
+                var mainTask = Task.Run(() => MainConnection.Close());
+                var userTask = Task.Run(() => UserConnection.Close());
+
+                await mainTask;
+                await userTask;
+
+                if (mainTask.Exception != null && userTask != null)
+                    return new AggregateException(mainTask.Exception, userTask.Exception);
+                if (mainTask.Exception != null)
+                    return mainTask.Exception;
+                if (userTask.Exception != null)
+                    return userTask.Exception;
+                return null;
+            }
+            catch (Exception ex) { return ex; }
         }
         public RelayCommand UpdateServesCommand
         {
@@ -234,7 +456,6 @@ namespace HydropressDB
                     }));
                 }
         }
-
         public RelayCommand SetTextBoxToDataGridCommand
         {
             get
@@ -242,7 +463,8 @@ namespace HydropressDB
                 return setTextBoxToDataGridCommand ??
                     (setTextBoxToDataGridCommand = new RelayCommand(obj =>
                     {
-                        ((TextBox)obj).Text = (string)SelectedServer[0];
+                        if (SelectedServer != null && SelectedServer[0] != null)
+                            ((TextBox)obj).Text = SelectedServer == null ? "" : (string)SelectedServer[0];
                     }));
             }
         }
@@ -282,6 +504,54 @@ namespace HydropressDB
                     Application.Current.MainWindow.WindowState = WindowState.Minimized));
             }
         }
+        
+        // connections
+        public int ConnectionTimeout
+        {
+            get => connectTimeout;
+            set
+            {
+                connectTimeout = value;
+                OnPropertyChanged(nameof(ConnectionTimeout));
+            }
+        }
+        public SqlConnection MainConnection
+        {
+            get => mainConnection;
+            set
+            {
+                mainConnection = value;
+                OnPropertyChanged(nameof(MainConnection));
+            }
+        }
+        public SqlConnection UserConnection
+        {
+            get => userConnection;
+            set
+            {
+                userConnection = value;
+                OnPropertyChanged(nameof(UserConnection));
+            }
+        }
+        public DataRowView SelectedServer
+        {
+            get => selectedServer;
+            set
+            {
+                selectedServer = value;
+                OnPropertyChanged(nameof(SelectedServer));
+            }
+        }
+        
+        public string SelectedDb
+        {
+            get => selectedDb;
+            set
+            {
+                selectedDb = value;
+                OnPropertyChanged(nameof(SelectedDb));
+            }
+        }
         public bool IsLoading
         {
             get => isLoading;
@@ -298,6 +568,24 @@ namespace HydropressDB
             {
                 serverListStatus = value;
                 OnPropertyChanged("ServerListStatus");
+            }
+        }
+        public Page MainPage
+        {
+            get => mainPage;
+            set
+            {
+                mainPage = value;
+                OnPropertyChanged(nameof(MainPage));
+            }
+        }
+        public Page AuthPage
+        {
+            get => authPage;
+            set
+            {
+                authPage = value;
+                OnPropertyChanged(nameof(AuthPage));
             }
         }
         public Page ServerPage

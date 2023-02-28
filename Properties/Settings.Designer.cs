@@ -32,6 +32,9 @@ namespace HydropressDB.Properties {
             get {
                 return ((string)(this["HydropressDBConnectionString"]));
             }
+            set {
+                this["HydropressDBConnectionString"] = value;
+            }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
@@ -42,6 +45,9 @@ namespace HydropressDB.Properties {
         public string HydropressUserDBConnectionString {
             get {
                 return ((string)(this["HydropressUserDBConnectionString"]));
+            }
+            set {
+                this["HydropressUserDBConnectionString"] = value;
             }
         }
     }
