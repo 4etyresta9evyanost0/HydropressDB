@@ -118,21 +118,23 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>-->
                         <Button Content="Авторизация"
-                                Command=""
-                                CommandParameter=""/>
-                        <!--<Button Content="Выбор"/>-->
+                                Command="{Binding ChangeFrame}"
+                                CommandParameter="{Binding AuthPage}"/>
                         <Button Content="Подключение" VerticalAlignment="Bottom"
-                                Command=""
-                                CommandParameter=""/>
+                                Command="{Binding ChangeFrame}"
+                                CommandParameter="{Binding ServerPage}"/>
                         <Button Content="Администратор" VerticalAlignment="Bottom"
-                                Command=""
-                                CommandParameter=""/>
+                                Command="{Binding ChangeFrame }"
+                                CommandParameter="{Binding AdminPage}"/>
                         <Button Content="Конструктор" VerticalAlignment="Bottom"
-                                Command=""
-                                CommandParameter=""/>
+                                Command="{Binding ChangeFrame}"
+                                CommandParameter="{Binding ConstructorPage}"/>
                         <Button Content="Просмотр" VerticalAlignment="Bottom"
-                                Command=""
-                                CommandParameter=""/>
+                                Command="{Binding ChangeFrame}"
+                                CommandParameter="{Binding CommonPage}"/>
+                        <Button Content="Меню" VerticalAlignment="Bottom"
+                                Command="{Binding ChangeFrame}"
+                                CommandParameter="{Binding MainPage}"/>
                     </StackPanel>
                 </Border>
                 <Frame NavigationUIVisibility="Hidden" Background="DarkGray" 

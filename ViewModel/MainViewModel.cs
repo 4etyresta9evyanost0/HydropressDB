@@ -17,11 +17,11 @@ using System.Windows.Input;
 using System.Data.Common;
 using System.Windows;
 using Xceed.Wpf.AvalonDock.Controls;
-using Microsoft.Data.SqlClient;
 //using System.Data.SqlClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO;
+using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime;
 using HydropressDB.HydropressDBDataSetTableAdapters;
@@ -158,11 +158,52 @@ namespace HydropressDB
         ObservableCollection<Page> availablePages = new ObservableCollection<Page>();
         ObservableCollection<object> loadingTasks = new ObservableCollection<object>();
         public ObservableCollection<Page> AvailablePages { get => availablePages; }
-        DbManagement dbManagement = new DbManagement();
+        DbManagement dbManagement;
         Page currentPage;
         Page mainPage = new MainMenu();
         Page authPage = new AuthorizationPage();
         Page serverPage = new ServerSelectorPage();
+        Page adminPage = new AdminPage();
+        Page commonPage = new CommonPage();
+        Page constructorPage = new ConstructorPage();
+
+
+        public DbManagement DbManagement
+        {
+            get => dbManagement;
+
+        }
+
+        public Page AdminPage
+        {
+            get => adminPage;
+            set 
+            {
+                adminPage = value;
+                OnPropertyChanged(nameof(AdminPage));
+            }
+        }
+
+        public Page CommonPage
+        {
+            get => commonPage;
+            set
+            {
+                commonPage = value;
+                OnPropertyChanged(nameof(AdminPage));
+            }
+        }
+
+        public Page ConstructorPage
+        {
+            get => constructorPage;
+            set
+            {
+                constructorPage = value;
+                OnPropertyChanged(nameof(ConstructorPage));
+            }
+        }
+
         ServerListStatus serverListStatus = ServerListStatus.Updating;
         //ObservableCollection<(Server, Database[])> servers;
         bool isLoading;
@@ -223,6 +264,10 @@ namespace HydropressDB
         public MainViewModel()
         {
             #region Initialization
+            pages.Add(serverPage);
+            pages.Add(authPage);
+            pages.Add(mainPage);
+            //pages.Add();
             LoadingTasks.CollectionChanged += (s, e) => IsLoading = !loadingTasks.IsNullOrEmpty();
             Pages.CollectionChanged += (s, e) => { };
             AvailablePages.CollectionChanged += (s, e) => { };
@@ -577,6 +622,7 @@ namespace HydropressDB
             {
                 mainConnection = value;
                 OnPropertyChanged(nameof(MainConnection));
+                Properties.Settings.Default.HydropressDBConnectionString = value.ConnectionString;
             }
         }
         public SqlConnection UserConnection
@@ -586,6 +632,8 @@ namespace HydropressDB
             {
                 userConnection = value;
                 OnPropertyChanged(nameof(UserConnection));
+                Properties.Settings.Default.HydropressUserDBConnectionString = value.ConnectionString;
+
             }
         }
         public DataRowView SelectedServer

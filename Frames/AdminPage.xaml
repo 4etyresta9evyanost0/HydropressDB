@@ -1,14 +1,47 @@
-﻿<Page x:Class="HydropressDB.AdminPage"
+﻿<Page
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       xmlns:local="clr-namespace:HydropressDB"
+      xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="HydropressDB.AdminPage"
       mc:Ignorable="d" 
       d:DesignHeight="368" d:DesignWidth="618"
-      Title="AdminPage">
+      Title="AdminPage" DataContext="{DynamicResource AdminVm}">
 
     <Grid Background="White">
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="41*"/>
+        </Grid.RowDefinitions>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding DataSet.Tables[0], UpdateSourceTrigger=PropertyChanged}"/>
+        <ComboBox x:Name="tableCb" HorizontalAlignment="Left" ItemsSource="{Binding Tables}" 
+                  SelectedItem="{Binding SelectedTable, UpdateSourceTrigger=PropertyChanged}" 
+                  Margin="10,0,0,0" VerticalAlignment="Center" Width="120" Height="22">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction
+                            Command="{Binding TableChange}"
+                            CommandParameter="{Binding ElementName=tableCb, Path=SelectedItem}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </ComboBox>
+        <ComboBox x:Name="dbCb" HorizontalAlignment="Left" 
+                  Margin="148,0,0,0" VerticalAlignment="Center" Width="120" Height="22"
+                  SelectedItem="{Binding SelectedDatabase, UpdateSourceTrigger=PropertyChanged}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction
+                            Command="{Binding DatabaseChange}"
+                            CommandParameter="{Binding ElementName=dbCb, Path=SelectedItem}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <System:String>MainDB</System:String>
+            <System:String>UserDB</System:String>
+        </ComboBox>
+        <Button Content="Сохранить" HorizontalAlignment="Left" Margin="498,0,0,0" VerticalAlignment="Center" Width="110"
+                Command="{Binding SaveChanges}"/>
+
     </Grid>
 </Page>

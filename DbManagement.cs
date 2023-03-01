@@ -8,11 +8,11 @@ using System.Data.SqlClient;
 
 namespace HydropressDB
 {
-    internal class DbManagement
+    internal class DbManagement : ViewModel
     {
         public HydropressDBDataSet MainDataSet;
         public HydropressUserDBDataSet UserDataSet;
-        public DbManagement() { }
+        public DbManagement() {}
 
     }
 }

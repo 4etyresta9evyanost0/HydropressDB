@@ -6,5 +6,6 @@
     <Application.Resources>
         <local:MainViewModel x:Key="Mvm" x:Name="Mvm"/>
         <local:AuthorizationViewModel x:Key="AuthVm" x:Name="AuthVm"/>
+        <local:AdminPageViewModel x:Key="AdminVm" x:Name="AdminVm"/>
     </Application.Resources>
 </Application>

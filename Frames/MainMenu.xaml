@@ -6,9 +6,10 @@
       xmlns:local="clr-namespace:HydropressDB"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="MainMenu">
+      Title="MainMenu"
+      DataContext="{DynamicResource Mvm}">
 
     <Grid Background="White">
-        
+        <Label Content="Пока что здесь ничего нет."></Label>
     </Grid>
 </Page>
